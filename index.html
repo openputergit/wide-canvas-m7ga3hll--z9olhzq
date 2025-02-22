@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Sorting Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #1a1a1a;
+            color: #FFA500;
+        }
+        .array-bar {
+            transition: height 0.2s ease;
+            box-shadow: 0 0 10px rgba(255, 165, 0, 0.3);
+            border: 1px solid #FFA500;
+        }
+        .neo-button {
+            background: #1a1a1a;
+            border: 2px solid #FFA500;
+            box-shadow: 3px 3px 0 #FFA500;
+            transition: all 0.2s;
+        }
+        .neo-button:hover {
+            box-shadow: 5px 5px 0 #FFA500;
+            transform: translate(-2px, -2px);
+        }
+        .neo-button:active {
+            box-shadow: 0 0 0 #FFA500;
+            transform: translate(3px, 3px);
+        }
+        .neo-input {
+            background: #1a1a1a;
+            border: 2px solid #FFA500;
+            color: #FFA500;
+        }
+        .neo-input:focus {
+            outline: none;
+            box-shadow: 3px 3px 0 #FFA500;
+        }
+        .neo-container {
+            border: 2px solid #FFA500;
+            box-shadow: 5px 5px 0 #FFA500;
+            background: #1a1a1a;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+    <div class="neo-container mx-auto p-6 rounded-lg max-w-6xl">
+        <h1 class="text-4xl font-bold mb-8 text-center">Advanced Sorting Visualizer</h1>
+        
+        <div class="mb-8 flex flex-wrap gap-4 justify-center items-center">
+            <div class="w-full md:w-auto flex flex-wrap gap-4">
+                <input type="text" id="arrayInput" placeholder="Enter numbers (comma separated)" 
+                       class="neo-input px-4 py-2 rounded w-full md:w-64">
+                <input type="number" id="sizeInput" placeholder="Array Size" value="50" min="5" max="200"
+                       class="neo-input px-4 py-2 rounded w-full md:w-40">
+                <input type="number" id="speedInput" placeholder="Speed (ms)" value="50" min="1" max="1000"
+                       class="neo-input px-4 py-2 rounded w-full md:w-40">
+            </div>
+            <button class="neo-button px-6 py-2 rounded font-bold" onclick="processUserInput()">
+                Set Array
+            </button>
+            <button class="neo-button px-6 py-2 rounded font-bold" onclick="generateNewArray()">
+                Random Array
+            </button>
+        </div>
+
+        <div class="flex flex-wrap gap-4 justify-center mb-8">
+            <button class="neo-button px-6 py-2 rounded font-bold" onclick="bubbleSort()">
+                Bubble Sort
+            </button>
+            <button class="neo-button px-6 py-2 rounded font-bold" onclick="selectionSort()">
+                Selection Sort
+            </button>
+            <button class="neo-button px-6 py-2 rounded font-bold" onclick="insertionSort()">
+                Insertion Sort
+            </button>
+            <button class="neo-button px-6 py-2 rounded font-bold" onclick="quickSort()">
+                Quick Sort
+            </button>
+            <button class="neo-button px-6 py-2 rounded font-bold" onclick="mergeSort()">
+                Merge Sort
+            </button>
+            <button class="neo-button px-6 py-2 rounded font-bold" onclick="heapSort()">
+                Heap Sort
+            </button>
+        </div>
+
+        <div class="flex items-end justify-center h-[60vh] gap-1 bg-black/20 rounded-lg p-4" id="array-container"></div>
+    </div>
+
+    <script>
+        let array = [];
+        let arraySize = 50;
+        let sorting = false;
+        let animationSpeed = 50;
+
+        function processUserInput() {
+            if (sorting) return;
+            const input = document.getElementById('arrayInput').value;
+            const numbers = input.split(',').map(num => parseInt(num.trim())).filter(num => !isNaN(num));
+            
+            if (numbers.length > 0) {
+                array = numbers;
+                displayArray();
+            }
+            
+            updateParameters();
+        }
+
+        function updateParameters() {
+            const sizeInput = parseInt(document.getElementById('sizeInput').value);
+            const speedInput = parseInt(document.getElementById('speedInput').value);
+            
+            if (!isNaN(sizeInput) && sizeInput >= 5 && sizeInput <= 200) {
+                arraySize = sizeInput;
+            }
+            if (!isNaN(speedInput) && speedInput > 0) {
+                animationSpeed = speedInput;
+            }
+        }
+
+        function generateNewArray() {
+            if (sorting) return;
+            updateParameters();
+            array = [];
+            for (let i = 0; i < arraySize; i++) {
+                array.push(Math.floor(Math.random() * 100) + 1);
+            }
+            displayArray();
+        }
+
+        function displayArray(colorIndices = {}) {
+            const container = document.getElementById('array-container');
+            container.innerHTML = '';
+            const maxVal = Math.max(...array);
+            
+            array.forEach((value, idx) => {
+                const bar = document.createElement('div');
+                bar.className = 'array-bar';
+                bar.style.height = `${(value/maxVal) * 95}%`;
+                bar.style.width = `${90/array.length}%`;
+                
+                if (colorIndices[idx]) {
+                    bar.style.backgroundColor = colorIndices[idx];
+                } else {
+                    bar.style.backgroundColor = '#FFA50033';
+                }
+                
+                container.appendChild(bar);
+            });
+        }
+
+        async function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function swap(i, j) {
+            let temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+
+        // Heap Sort Implementation
+        async function heapSort() {
+            if (sorting) return;
+            sorting = true;
+
+            async function heapify(n, i) {
+                let largest = i;
+                let left = 2 * i + 1;
+                let right = 2 * i + 2;
+
+                if (left < n && array[left] > array[largest]) {
+                    largest = left;
+                }
+
+                if (right < n && array[right] > array[largest]) {
+                    largest = right;
+                }
+
+                if (largest !== i) {
+                    await swap(i, largest);
+                    displayArray({[i]: '#FFA500', [largest]: '#FF4500'});
+                    await sleep(animationSpeed);
+                    await heapify(n, largest);
+                }
+            }
+
+            for (let i = Math.floor(array.length / 2) - 1; i >= 0; i--) {
+                await heapify(array.length, i);
+            }
+
+            for (let i = array.length - 1; i > 0; i--) {
+                await swap(0, i);
+                displayArray({[0]: '#FFA500', [i]: '#FF4500'});
+                await sleep(animationSpeed);
+                await heapify(i, 0);
+            }
+
+            displayArray();
+            sorting = false;
+        }
+
+        // Quick Sort Implementation
+        async function quickSort() {
+            if (sorting) return;
+            sorting = true;
+
+            async function partition(low, high) {
+                let pivot = array[high];
+                let i = low - 1;
+
+                for (let j = low; j < high; j++) {
+                    if (array[j] <= pivot) {
+                        i++;
+                        await swap(i, j);
+                        displayArray({[i]: '#FFA500', [j]: '#FF4500', [high]: '#FFD700'});
+                        await sleep(animationSpeed);
+                    }
+                }
+                await swap(i + 1, high);
+                return i + 1;
+            }
+
+            async function quickSortHelper(low, high) {
+                if (low < high) {
+                    let pi = await partition(low, high);
+                    await quickSortHelper(low, pi - 1);
+                    await quickSortHelper(pi + 1, high);
+                }
+            }
+
+            await quickSortHelper(0, array.length - 1);
+            displayArray();
+            sorting = false;
+        }
+
+        // Initialize
+        generateNewArray();
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
